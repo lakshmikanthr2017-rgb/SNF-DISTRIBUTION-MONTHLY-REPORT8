@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SNF Ledger</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:"Noto Sans Kannada","Tunga",Arial,sans-serif;
+    background:linear-gradient(135deg,#eef4ff,#f8fbff);
+    color:#202124;
+}
+
+.container{
+    max-width:1450px;
+    margin:auto;
+    padding:18px;
+}
+
+h1{
+    color:#17365d;
+    font-size:28px;
+    text-align:center;
+    margin:5px 0 18px;
+}
+
+h2{
+    color:#24476b;
+    text-align:center;
+    margin:8px 0 15px;
+}
+
+h3{
+    color:#315a82;
+    text-align:center;
+}
+
+.header-box,
+.form-box,
+.table-box,
+.summary-box{
+    background:#fff;
+    padding:18px;
+    margin-bottom:18px;
+    border-radius:16px;
+    box-shadow:0 5px 20px rgba(30,70,110,.10);
+    border:1px solid #e2eaf3;
+}
+
+.header-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:14px;
+}
+
+label{
+    display:block;
+    font-weight:bold;
+    color:#334e68;
+    margin-bottom:6px;
+}
+
+input,
+select{
+    width:100%;
+    padding:11px 12px;
+    font-size:15px;
+    border:1px solid #cbd5e1;
+    border-radius:9px;
+    background:#fff;
+    outline:none;
+}
+
+input:focus,
+select:focus{
+    border-color:#3578c4;
+    box-shadow:0 0 0 3px rgba(53,120,196,.12);
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+.attendance-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-top:16px;
+}
+
+.food-box{
+    border:1px solid #d8e2ec;
+    border-radius:13px;
+    padding:15px;
+    background:#f9fbfd;
+}
+
+.food-box h3{
+    margin-top:0;
+}
+
+.btn-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:18px;
+}
+
+button{
+    border:0;
+    border-radius:10px;
+    padding:11px 14px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+}
+
+button:hover{
+    transform:translateY(-1px);
+    box-shadow:0 5px 12px rgba(0,0,0,.12);
+}
+
+.btn-add{
+    background:linear-gradient(135deg,#198754,#20a464);
+    color:white;
+    margin-top:25px;
+}
+
+.btn-clear{
+    background:linear-gradient(135deg,#dc3545,#ef5363);
+    color:white;
+}
+
+.btn-print{
+    background:linear-gradient(135deg,#0d6efd,#3185f5);
+    color:white;
+}
+
+.btn-summary{
+    background:linear-gradient(135deg,#6f42c1,#8759db);
+    color:white;
+}
+
+.table-wrap{
+    overflow-x:auto;
+    border-radius:10px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1200px;
+}
+
+th{
+    background:linear-gradient(135deg,#24476b,#356c9d);
+    color:white;
+    font-weight:bold;
+}
+
+th,
+td{
+    border:1px solid #cbd5e1;
+    padding:8px 7px;
+    text-align:center;
+    white-space:nowrap;
+}
+
+tbody tr:nth-child(even){
+    background:#f7faff;
+}
+
+tbody tr:hover{
+    background:#edf5ff;
+}
+
+.total-row{
+    background:#fff3cd !important;
+    font-weight:bold;
+}
+
+.delete-btn{
+    background:#dc3545;
+    color:white;
+    padding:6px 10px;
+    width:auto;
+}
+
+.summary-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.summary-card{
+    border:1px solid #ccd8e5;
+    border-radius:14px;
+    padding:12px;
+    background:#fbfdff;
+}
+
+.summary-card table{
+    min-width:0;
+}
+
+.summary-card th{
+    background:#315a82;
+}
+
+.grand-total{
+    margin-top:18px;
+    padding:16px;
+    text-align:center;
+    border-radius:12px;
+    background:linear-gradient(135deg,#d1e7dd,#e5f5ed);
+    color:#155d3b;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.designed-by{
+    text-align:center;
+    color:#718096;
+    font-size:13px;
+    margin:22px 0 8px;
+    letter-spacing:.4px;
+}
+
+
+/* ================= PRINT ================= */
+
+@page{
+    size:A4 landscape;
+    margin:10mm;
+}
+
+@media print{
+
+    body{
+        background:white !important;
+    }
+
+    .no-print,
+    .header-box,
+    .form-box,
+    .designed-by{
+        display:none !important;
+    }
+
+    .container{
+        max-width:none;
+        padding:0;
+    }
+
+    .table-box,
+    .summary-box{
+        box-shadow:none;
+        border:0;
+        padding:0;
+        margin:0;
+    }
+
+    /* Register print */
+
+    body.print-register .table-box{
+        display:block !important;
+    }
+
+    body.print-register .summary-box{
+        display:none !important;
+    }
+
+    /* Monthly consolidation print */
+
+    body.print-summary .table-box{
+        display:none !important;
+    }
+
+    body.print-summary .summary-box{
+        display:block !important;
+    }
+
+    table{
+        min-width:0 !important;
+        width:100%;
+        font-size:10px;
+    }
+
+    th,
+    td{
+        padding:5px 4px;
+    }
+
+    .summary-grid{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+    }
+
+    .summary-card{
+        break-inside:avoid;
+    }
+
+    .grand-total{
+        margin-top:12px;
+    }
+}
+
+
+/* ================= MOBILE ================= */
+
+@media(max-width:850px){
+
+    .header-grid,
+    .form-grid,
+    .attendance-grid,
+    .summary-grid{
+        grid-template-columns:1fr;
+    }
+
+    .btn-row{
+        grid-template-columns:1fr;
+    }
+
+    h1{
+        font-size:22px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+<!-- ================= HEADER ================= -->
+
+<div class="header-box">
+
+<h1>
+ಪೂರಕ ಪೌಷ್ಠಿಕ ಆಹಾರ ತಿಂಗಳುವಾರು ವಿತರಣಾ ವಹಿ
+</h1>
+
+<div class="header-grid">
+
+<div>
+<label>ಶಾಲೆಯ ಹೆಸರು</label>
+
+<input
+type="text"
+id="schoolName"
+placeholder="ಶಾಲೆಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ">
+</div>
+
+
+<div>
+<label>ಶೈಕ್ಷಣಿಕ ವರ್ಷ</label>
+
+<select id="academicYear">
+
+<option>2025-26</option>
+<option selected>2026-27</option>
+<option>2027-28</option>
+<option>2028-29</option>
+
+</select>
+</div>
+
+
+<div>
+<label>ತಿಂಗಳು</label>
+
+<select id="month">
+
+<option>ಏಪ್ರಿಲ್</option>
+<option>ಮೇ</option>
+<option>ಜೂನ್</option>
+<option>ಜುಲೈ</option>
+<option>ಆಗಸ್ಟ್</option>
+<option>ಸೆಪ್ಟೆಂಬರ್</option>
+<option>ಅಕ್ಟೋಬರ್</option>
+<option>ನವೆಂಬರ್</option>
+<option>ಡಿಸೆಂಬರ್</option>
+<option>ಜನವರಿ</option>
+<option>ಫೆಬ್ರವರಿ</option>
+<option>ಮಾರ್ಚ್</option>
+
+</select>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================= ENTRY ================= -->
+
+<div class="form-box no-print">
+
+<h2>ದೈನಂದಿನ ನಮೂದು</h2>
+
+
+<div class="form-grid">
+
+<div>
+
+<label>ದಿನಾಂಕ</label>
+
+<input
+type="date"
+id="entryDate">
+
+</div>
+
+
+<div>
+
+<label>ಅನುದಾನ</label>
+
+<select id="grantType">
+
+<option value="STATE">STATE</option>
+<option value="APF">APF</option>
+
+</select>
+
+</div>
+
+
+<div>
+
+<label>ಆಹಾರ</label>
+
+<select id="foodType">
+
+<option value="EGG">ಮೊಟ್ಟೆ</option>
+<option value="BANANA">ಬಾಳೆಹಣ್ಣು</option>
+
+</select>
+
+</div>
+
+
+<div>
+
+<label>&nbsp;</label>
+
+<button
+class="btn-add"
+onclick="addEntry()">
+
+ನಮೂದು ಸೇರಿಸಿ
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- ================= ATTENDANCE ================= -->
+
+<div class="attendance-grid">
+
+
+<div class="food-box">
+
+<h3>ಮೊಟ್ಟೆ ಹಾಜರಾತಿ</h3>
+
+<div class="form-grid">
+
+<div>
+
+<label>1 ರಿಂದ 5</label>
+
+<input
+type="number"
+id="egg1to5"
+min="0"
+value="0">
+
+</div>
+
+
+<div>
+
+<label>6 ರಿಂದ 8</label>
+
+<input
+type="number"
+id="egg6to8"
+min="0"
+value="0">
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="food-box">
+
+<h3>ಬಾಳೆಹಣ್ಣು ಹಾಜರಾತಿ</h3>
+
+<div class="form-grid">
+
+<div>
+
+<label>1 ರಿಂದ 5</label>
+
+<input
+type="number"
+id="banana1to5"
+min="0"
+value="0">
+
+</div>
+
+
+<div>
+
+<label>6 ರಿಂದ 8</label>
+
+<input
+type="number"
+id="banana6to8"
+min="0"
+value="0">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================= BUTTONS ================= -->
+
+<div class="btn-row">
+
+<button
+class="btn-clear"
+onclick="clearForm()">
+
+Clear Entry
+
+</button>
+
+
+<button
+class="btn-print"
+onclick="printRegister()">
+
+Print Register
+
+</button>
+
+
+<button
+class="btn-summary"
+onclick="scrollToSummary()">
+
+Monthly Consolidation
+
+</button>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= REGISTER ================= -->
+
+<div class="table-box">
+
+<h2>ದೈನಂದಿನ ವಿತರಣಾ ವಹಿ</h2>
+
+
+<div class="table-wrap">
+
+<table id="registerTable">
+
+<thead>
+
+<tr>
+
+<th>ಕ್ರಮ</th>
+<th>ದಿನಾಂಕ</th>
+<th>1 ರಿಂದ 5</th>
+<th>6 ರಿಂದ 8</th>
+<th>ಒಟ್ಟು ಹಾಜರಾತಿ</th>
+<th>ಆಹಾರ</th>
+<th>ಅನುದಾನ</th>
+
+<th>ಮೊಟ್ಟೆ ಹಣ<br>₹5</th>
+
+<th>ಮೊಟ್ಟೆ ಸಾಗಾಣಿಕೆ<br>₹0.20</th>
+
+<th>ಮೊಟ್ಟೆ ಸುಲಿಯುವ ಕೂಲಿ<br>₹0.30</th>
+
+<th>ಮೊಟ್ಟೆ ಇಂಧನ<br>₹0.50</th>
+
+<th>ಬಾಳೆಹಣ್ಣು ಹಣ<br>₹5.80</th>
+
+<th>ಬಾಳೆಹಣ್ಣು ಸಾಗಾಣಿಕೆ<br>₹0.20</th>
+
+<th>ಒಟ್ಟು ಹಣ</th>
+
+<th class="no-print">
+ಅಳಿಸಿ
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="registerBody"></tbody>
+
+
+<tfoot>
+
+<tr class="total-row">
+
+<td colspan="2">
+ಒಟ್ಟು
+</td>
+
+<td id="total15">
+0
+</td>
+
+<td id="total68">
+0
+</td>
+
+<td id="totalAttendance">
+0
+</td>
+
+<td></td>
+<td></td>
+
+<td id="totalEggRate">
+₹0.00
+</td>
+
+<td id="totalEggTrans">
+₹0.00
+</td>
+
+<td id="totalEggPeel">
+₹0.00
+</td>
+
+<td id="totalEggFuel">
+₹0.00
+</td>
+
+<td id="totalBananaRate">
+₹0.00
+</td>
+
+<td id="totalBananaTrans">
+₹0.00
+</td>
+
+<td id="grandAmount">
+₹0.00
+</td>
+
+<td class="no-print"></td>
+
+</tr>
+
+</tfoot>
+
+</table>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= MONTHLY SUMMARY ================= -->
+
+<div
+class="summary-box"
+id="summarySection">
+
+<h2>
+ಮಾಸಿಕ ಕ್ರೋಢೀಕೃತ ವರದಿ
+</h2>
+
+
+<div class="summary-grid">
+
+
+<!-- APF -->
+
+<div class="summary-card">
+
+<h3>APF ಅನುದಾನ</h3>
+
+<table>
+
+<tr>
+<th>ವಿವರ</th>
+<th>ಒಟ್ಟು</th>
+</tr>
+
+<tr>
+<td>ಒಟ್ಟು ದಿನಗಳು</td>
+<td id="apfDays">0</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಒಟ್ಟು ಹಾಜರಾತಿ</td>
+<td id="apfEgg">0</td>
+</tr>
+
+<tr>
+<td>ಬಾಳೆಹಣ್ಣು ಒಟ್ಟು ಹಾಜರಾತಿ</td>
+<td id="apfBanana">0</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆಯ ಒಟ್ಟು ಹಣ</td>
+<td id="apfEggRate">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಸಾಗಾಣಿಕಾ ವೆಚ್ಚ</td>
+<td id="apfEggTrans">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಸುಲಿಯುವ ಕೂಲಿ</td>
+<td id="apfEggPeel">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಇಂಧನ ವೆಚ್ಚ</td>
+<td id="apfEggFuel">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಬಾಳೆಹಣ್ಣಿನ ಒಟ್ಟು ಹಣ</td>
+<td id="apfBananaRate">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಬಾಳೆಹಣ್ಣು ಸಾಗಾಣಿಕಾ ವೆಚ್ಚ</td>
+<td id="apfBananaTrans">₹0.00</td>
+</tr>
+
+<tr class="total-row">
+<td>ಒಟ್ಟು ವೆಚ್ಚ</td>
+<td id="apfTotal">₹0.00</td>
+</tr>
+
+</table>
+
+</div>
+
+
+
+<!-- STATE -->
+
+<div class="summary-card">
+
+<h3>STATE ಅನುದಾನ</h3>
+
+<table>
+
+<tr>
+<th>ವಿವರ</th>
+<th>ಒಟ್ಟು</th>
+</tr>
+
+<tr>
+<td>ಒಟ್ಟು ದಿನಗಳು</td>
+<td id="stateDays">0</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಒಟ್ಟು ಹಾಜರಾತಿ</td>
+<td id="stateEgg">0</td>
+</tr>
+
+<tr>
+<td>ಬಾಳೆಹಣ್ಣು ಒಟ್ಟು ಹಾಜರಾತಿ</td>
+<td id="stateBanana">0</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆಯ ಒಟ್ಟು ಹಣ</td>
+<td id="stateEggRate">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಸಾಗಾಣಿಕಾ ವೆಚ್ಚ</td>
+<td id="stateEggTrans">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಸುಲಿಯುವ ಕೂಲಿ</td>
+<td id="stateEggPeel">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಮೊಟ್ಟೆ ಇಂಧನ ವೆಚ್ಚ</td>
+<td id="stateEggFuel">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಬಾಳೆಹಣ್ಣಿನ ಒಟ್ಟು ಹಣ</td>
+<td id="stateBananaRate">₹0.00</td>
+</tr>
+
+<tr>
+<td>ಬಾಳೆಹಣ್ಣು ಸಾಗಾಣಿಕಾ ವೆಚ್ಚ</td>
+<td id="stateBananaTrans">₹0.00</td>
+</tr>
+
+<tr class="total-row">
+<td>ಒಟ್ಟು ವೆಚ್ಚ</td>
+<td id="stateTotal">₹0.00</td>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+
+<div class="grand-total">
+
+ಒಟ್ಟು ಮಾಸಿಕ ವೆಚ್ಚ :
+<span id="monthlyGrandTotal">
+₹0.00
+</span>
+
+</div>
+
+
+<br>
+
+
+<button
+class="btn-print no-print"
+onclick="printSummary()">
+
+Print Monthly Consolidation
+
+</button>
+
+</div>
+
+
+<!-- ================= DESIGNER ================= -->
+
+<div class="designed-by">
+
+Designed by : LAKSHMIKANTH R
+
+</div>
+
+
+</div>
+
+
+
+<script>
+
+/* =====================================================
+   SNF LEDGER
+   ===================================================== */
+
+const STORAGE_KEY =
+"snf_entries_v4";
+
+const HEADER_KEY =
+"snf_header_v4";
+
+
+let entries =
+JSON.parse(
+localStorage.getItem(STORAGE_KEY) || "[]"
+);
+
+
+/* ================= HEADER ================= */
+
+const schoolName =
+document.getElementById("schoolName");
+
+const academicYear =
+document.getElementById("academicYear");
+
+const month =
+document.getElementById("month");
+
+
+function saveHeader(){
+
+localStorage.setItem(
+HEADER_KEY,
+JSON.stringify({
+
+schoolName:
+schoolName.value,
+
+academicYear:
+academicYear.value,
+
+month:
+month.value
+
+})
+);
+
+}
+
+
+function loadHeader(){
+
+const data =
+JSON.parse(
+localStorage.getItem(HEADER_KEY) || "{}"
+);
+
+
+if(data.schoolName)
+schoolName.value =
+data.schoolName;
+
+
+if(data.academicYear)
+academicYear.value =
+data.academicYear;
+
+
+if(data.month)
+month.value =
+data.month;
+
+}
+
+
+schoolName.addEventListener(
+"input",
+saveHeader
+);
+
+academicYear.addEventListener(
+"change",
+saveHeader
+);
+
+month.addEventListener(
+"change",
+saveHeader
+);
+
+
+loadHeader();
+
+
+
+/* ================= CLEAR ================= */
+
+function clearForm(){
+
+document.getElementById(
+"entryDate"
+).value="";
+
+document.getElementById(
+"egg1to5"
+).value=0;
+
+document.getElementById(
+"egg6to8"
+).value=0;
+
+document.getElementById(
+"banana1to5"
+).value=0;
+
+document.getElementById(
+"banana6to8"
+).value=0;
+
+}
+
+
+
+/* ================= AMOUNT ================= */
+
+function calculateAmounts(e){
+
+const egg =
+Number(e.eggTotal || 0);
+
+const banana =
+Number(e.bananaTotal || 0);
+
+
+e.eggRate =
+egg * 5;
+
+e.eggTrans =
+egg * 0.20;
+
+e.eggPeel =
+egg * 0.30;
+
+e.eggFuel =
+egg * 0.50;
+
+
+e.bananaRate =
+banana * 5.80;
+
+e.bananaTrans =
+banana * 0.20;
+
+
+e.rowTotal =
+e.eggRate +
+e.eggTrans +
+e.eggPeel +
+e.eggFuel +
+e.bananaRate +
+e.bananaTrans;
+
+}
+
+
+
+/* ================= DATE ================= */
+
+function formatDate(dateString){
+
+if(!dateString)
+return "";
+
+const p =
+dateString.split("-");
+
+return p[2] +
+"-" +
+p[1] +
+"-" +
+p[0];
+
+}
+
+
+
+/* ================= ADD ENTRY ================= */
+
+function addEntry(){
+
+const rawDate =
+document.getElementById(
+"entryDate"
+).value;
+
+
+const grantType =
+document.getElementById(
+"grantType"
+).value;
+
+
+const foodType =
+document.getElementById(
+"foodType"
+).value;
+
+
+if(!rawDate){
+
+alert(
+"ದಯವಿಟ್ಟು ದಿನಾಂಕ ಆಯ್ಕೆಮಾಡಿ."
+);
+
+return;
+
+}
+
+
+const egg1to5 =
+Number(
+document.getElementById(
+"egg1to5"
+).value
+) || 0;
+
+
+const egg6to8 =
+Number(
+document.getElementById(
+"egg6to8"
+).value
+) || 0;
+
+
+const banana1to5 =
+Number(
+document.getElementById(
+"banana1to5"
+).value
+) || 0;
+
+
+const banana6to8 =
+Number(
+document.getElementById(
+"banana6to8"
+).value
+) || 0;
+
+
+
+/* SAME DATE - OPPOSITE GRANT */
+
+const oppositeGrant =
+grantType === "STATE"
+? "APF"
+: "STATE";
+
+
+const conflict =
+entries.find(
+e =>
+e.rawDate === rawDate &&
+e.grantType === oppositeGrant
+);
+
+
+if(conflict){
+
+alert(
+"ಈ ದಿನಾಂಕಕ್ಕೆ ಈಗಾಗಲೇ " +
+oppositeGrant +
+" ಅನುದಾನ ನಮೂದಿಸಲಾಗಿದೆ.\n\n" +
+"ಒಂದೇ ದಿನ STATE ಮತ್ತು APF ಎರಡನ್ನೂ ನಮೂದಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ."
+);
+
+return;
+
+}
+
+
+
+/* SAME DATE + SAME GRANT */
+
+let existing =
+entries.find(
+e =>
+e.rawDate === rawDate &&
+e.grantType === grantType
+);
+
+
+if(existing){
+
+
+/* EGG */
+
+if(foodType === "EGG"){
+
+existing.egg1to5 =
+egg1to5;
+
+existing.egg6to8 =
+egg6to8;
+
+existing.eggTotal =
+egg1to5 +
+egg6to8;
+
+}
+
+
+/* BANANA */
+
+else{
+
+existing.banana1to5 =
+banana1to5;
+
+existing.banana6to8 =
+banana6to8;
+
+existing.bananaTotal =
+banana1to5 +
+banana6to8;
+
+}
+
+
+calculateAmounts(existing);
+
+}
+
+
+else{
+
+
+const newEntry={
+
+id:Date.now(),
+
+rawDate:
+
+rawDate,
+
+date:
+
+formatDate(rawDate),
+
+grantType:
+
+grantType,
+
+
+egg1to5:0,
+
+egg6to8:0,
+
+eggTotal:0,
+
+
+banana1to5:0,
+
+banana6to8:0,
+
+bananaTotal:0
+
+};
+
+
+
+if(foodType === "EGG"){
+
+newEntry.egg1to5 =
+egg1to5;
+
+newEntry.egg6to8 =
+egg6to8;
+
+newEntry.eggTotal =
+egg1to5 +
+egg6to8;
+
+}
+
+else{
+
+newEntry.banana1to5 =
+banana1to5;
+
+newEntry.banana6to8 =
+banana6to8;
+
+newEntry.bananaTotal =
+banana1to5 +
+banana6to8;
+
+}
+
+
+calculateAmounts(newEntry);
+
+entries.push(newEntry);
+
+}
+
+
+/* SORT */
+
+entries.sort(
+(a,b) =>
+a.rawDate.localeCompare(
+b.rawDate
+)
+);
+
+
+/* SAVE */
+
+saveData();
+
+renderTable();
+
+renderSummary();
+
+updateGrandSummary();
+
+clearForm();
+
+
+alert(
+"Entry saved successfully."
+);
+
+}
+
+
+
+/* ================= SAVE ================= */
+
+function saveData(){
+
+localStorage.setItem(
+STORAGE_KEY,
+JSON.stringify(entries)
+);
+
+}
+
+
+
+/* ================= DELETE ================= */
+
+function deleteEntry(id){
+
+if(
+!confirm(
+"ಈ ದಿನದ ನಮೂದನ್ನು ಅಳಿಸಬೇಕೇ?"
+)
+)
+return;
+
+
+entries =
+entries.filter(
+e => e.id !== id
+);
+
+
+saveData();
+
+renderTable();
+
+renderSummary();
+
+updateGrandSummary();
+
+}
+
+
+
+/* ================= REGISTER ================= */
+
+function renderTable(){
+
+const body =
+document.getElementById(
+"registerBody"
+);
+
+body.innerHTML="";
+
+
+let total15=0;
+
+let total68=0;
+
+let totalAttendance=0;
+
+
+let totalEggRate=0;
+
+let totalEggTrans=0;
+
+let totalEggPeel=0;
+
+let totalEggFuel=0;
+
+
+let totalBananaRate=0;
+
+let totalBananaTrans=0;
+
+
+let grandAmount=0;
+
+
+
+entries.forEach(
+(e,index)=>{
+
+
+calculateAmounts(e);
+
+
+const combined15 =
+e.egg1to5 +
+e.banana1to5;
+
+
+const combined68 =
+e.egg6to8 +
+e.banana6to8;
+
+
+const combinedTotal =
+e.eggTotal +
+e.bananaTotal;
+
+
+const foods=[];
+
+
+if(e.eggTotal>0)
+foods.push("ಮೊಟ್ಟೆ");
+
+
+if(e.bananaTotal>0)
+foods.push("ಬಾಳೆಹಣ್ಣು");
+
+
+const foodText =
+foods.join(" + ");
+
+
+const tr =
+document.createElement("tr");
+
+
+tr.innerHTML=`
+
+<td>${index+1}</td>
+
+<td>${e.date}</td>
+
+<td>${combined15}</td>
+
+<td>${combined68}</td>
+
+<td>${combinedTotal}</td>
+
+<td>${foodText}</td>
+
+<td>${e.grantType}</td>
+
+<td>₹${e.eggRate.toFixed(2)}</td>
+
+<td>₹${e.eggTrans.toFixed(2)}</td>
+
+<td>₹${e.eggPeel.toFixed(2)}</td>
+
+<td>₹${e.eggFuel.toFixed(2)}</td>
+
+<td>₹${e.bananaRate.toFixed(2)}</td>
+
+<td>₹${e.bananaTrans.toFixed(2)}</td>
+
+<td>
+<b>
+₹${e.rowTotal.toFixed(2)}
+</b>
+</td>
+
+<td class="no-print">
+
+<button
+class="delete-btn"
+onclick="deleteEntry(${e.id})">
+
+ಅಳಿಸಿ
+
+</button>
+
+</td>
+
+`;
+
+
+body.appendChild(tr);
+
+
+total15 +=
+combined15;
+
+total68 +=
+combined68;
+
+totalAttendance +=
+combinedTotal;
+
+
+totalEggRate +=
+e.eggRate;
+
+totalEggTrans +=
+e.eggTrans;
+
+totalEggPeel +=
+e.eggPeel;
+
+totalEggFuel +=
+e.eggFuel;
+
+
+totalBananaRate +=
+e.bananaRate;
+
+totalBananaTrans +=
+e.bananaTrans;
+
+
+grandAmount +=
+e.rowTotal;
+
+});
+
+
+document.getElementById(
+"total15"
+).textContent =
+total15;
+
+
+document.getElementById(
+"total68"
+).textContent =
+total68;
+
+
+document.getElementById(
+"totalAttendance"
+).textContent =
+totalAttendance;
+
+
+document.getElementById(
+"totalEggRate"
+).textContent =
+"₹"+totalEggRate.toFixed(2);
+
+
+document.getElementById(
+"totalEggTrans"
+).textContent =
+"₹"+totalEggTrans.toFixed(2);
+
+
+document.getElementById(
+"totalEggPeel"
+).textContent =
+"₹"+totalEggPeel.toFixed(2);
+
+
+document.getElementById(
+"totalEggFuel"
+).textContent =
+"₹"+totalEggFuel.toFixed(2);
+
+
+document.getElementById(
+"totalBananaRate"
+).textContent =
+"₹"+totalBananaRate.toFixed(2);
+
+
+document.getElementById(
+"totalBananaTrans"
+).textContent =
+"₹"+totalBananaTrans.toFixed(2);
+
+
+document.getElementById(
+"grandAmount"
+).textContent =
+"₹"+grandAmount.toFixed(2);
+
+}
+
+
+
+/* ================= SUMMARY ================= */
+
+function renderSummary(){
+
+const data={
+
+APF:{
+
+days:new Set(),
+
+egg:0,
+
+banana:0,
+
+eggRate:0,
+
+eggTrans:0,
+
+eggPeel:0,
+
+eggFuel:0,
+
+bananaRate:0,
+
+bananaTrans:0
+
+},
+
+
+STATE:{
+
+days:new Set(),
+
+egg:0,
+
+banana:0,
+
+eggRate:0,
+
+eggTrans:0,
+
+eggPeel:0,
+
+eggFuel:0,
+
+bananaRate:0,
+
+bananaTrans:0
+
+}
+
+};
+
+
+
+entries.forEach(
+e=>{
+
+
+calculateAmounts(e);
+
+
+const d =
+data[e.grantType];
+
+
+if(!d)
+return;
+
+
+d.days.add(
+e.rawDate
+);
+
+
+d.egg +=
+e.eggTotal;
+
+
+d.banana +=
+e.bananaTotal;
+
+
+d.eggRate +=
+e.eggRate;
+
+d.eggTrans +=
+e.eggTrans;
+
+d.eggPeel +=
+e.eggPeel;
+
+d.eggFuel +=
+e.eggFuel;
+
+
+d.bananaRate +=
+e.bananaRate;
+
+d.bananaTrans +=
+e.bananaTrans;
+
+});
+
+
+fillSummary(
+"apf",
+data.APF
+);
+
+
+fillSummary(
+"state",
+data.STATE
+);
+
+}
+
+
+
+/* ================= FILL SUMMARY ================= */
+
+function fillSummary(
+prefix,
+d
+){
+
+const total =
+
+d.eggRate +
+
+d.eggTrans +
+
+d.eggPeel +
+
+d.eggFuel +
+
+d.bananaRate +
+
+d.bananaTrans;
+
+
+document.getElementById(
+prefix+"Days"
+).textContent =
+d.days.size;
+
+
+document.getElementById(
+prefix+"Egg"
+).textContent =
+d.egg;
+
+
+document.getElementById(
+prefix+"Banana"
+).textContent =
+d.banana;
+
+
+document.getElementById(
+prefix+"EggRate"
+).textContent =
+"₹"+d.eggRate.toFixed(2);
+
+
+document.getElementById(
+prefix+"EggTrans"
+).textContent =
+"₹"+d.eggTrans.toFixed(2);
+
+
+document.getElementById(
+prefix+"EggPeel"
+).textContent =
+"₹"+d.eggPeel.toFixed(2);
+
+
+document.getElementById(
+prefix+"EggFuel"
+).textContent =
+"₹"+d.eggFuel.toFixed(2);
+
+
+document.getElementById(
+prefix+"BananaRate"
+).textContent =
+"₹"+d.bananaRate.toFixed(2);
+
+
+document.getElementById(
+prefix+"BananaTrans"
+).textContent =
+"₹"+d.bananaTrans.toFixed(2);
+
+
+document.getElementById(
+prefix+"Total"
+).textContent =
+"₹"+total.toFixed(2);
+
+}
+
+
+
+/* ================= GRAND TOTAL ================= */
+
+function getSummaryTotal(grant){
+
+let total=0;
+
+
+entries.forEach(
+e=>{
+
+if(e.grantType !== grant)
+return;
+
+
+calculateAmounts(e);
+
+
+total +=
+e.rowTotal;
+
+});
+
+
+return total;
+
+}
+
+
+
+function updateGrandSummary(){
+
+const state =
+getSummaryTotal(
+"STATE"
+);
+
+
+const apf =
+getSummaryTotal(
+"APF"
+);
+
+
+document.getElementById(
+"monthlyGrandTotal"
+).textContent =
+
+"₹"+
+(state+apf).toFixed(2);
+
+}
+
+
+
+/* ================= SCROLL ================= */
+
+function scrollToSummary(){
+
+document
+.getElementById(
+"summarySection"
+)
+.scrollIntoView({
+
+behavior:"smooth"
+
+});
+
+}
+
+
+
+/* ================= PRINT REGISTER ================= */
+
+function printRegister(){
+
+document.body.classList.remove(
+"print-summary"
+);
+
+document.body.classList.add(
+"print-register"
+);
+
+
+setTimeout(
+()=>{
+
+window.print();
+
+},
+100
+);
+
+}
+
+
+
+/* ================= PRINT SUMMARY ================= */
+
+function printSummary(){
+
+document.body.classList.remove(
+"print-register"
+);
+
+document.body.classList.add(
+"print-summary"
+);
+
+
+setTimeout(
+()=>{
+
+window.print();
+
+},
+100
+);
+
+}
+
+
+
+/* ================= AFTER PRINT ================= */
+
+window.onafterprint =
+function(){
+
+document.body.classList.remove(
+"print-register",
+"print-summary"
+);
+
+};
+
+
+
+/* ================= START ================= */
+
+renderTable();
+
+renderSummary();
+
+updateGrandSummary();
+
+</script>
+
+</body>
+  </html>
